@@ -1033,6 +1033,7 @@
             year: 'numeric'
           });
           $("modalAmt").value = defaultName;
+          $("modalAmt").inputMode = "text";
           $("quickChips").innerHTML = "";
           $("scrim").classList.add("open");
           setTimeout(function () { $("modalAmt").focus(); $("modalAmt").select(); }, 50);
@@ -1045,6 +1046,7 @@
           ? (player.status === "out" ? player.name + " sits back down." : "Chips for " + player.name + ".")
           : "Count " + player.name + "’s remaining chips.";
         $("modalAmt").value = mode === "buy" ? "100" : (player.status === "out" ? String(player.cashed) : "");
+        $("modalAmt").inputMode = "decimal";
         const chips = $("quickChips");
         chips.innerHTML = "";
         const vals = mode === "buy" ? [50, 100, 200, 300] : [0, 50, 100, 200];
