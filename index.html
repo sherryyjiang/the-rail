@@ -336,45 +336,129 @@
       margin-right: 6px;
       vertical-align: middle;
     }
+
+    .nights-view {
+      display: none;
+    }
+    .nights-view.active {
+      display: block;
+    }
+    .main-view.hidden {
+      display: none;
+    }
+    .night-card {
+      background: linear-gradient(180deg, rgba(26, 61, 42, 0.65), rgba(11, 22, 17, 0.85));
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    .night-card:active {
+      transform: scale(0.99);
+      background: linear-gradient(180deg, rgba(26, 61, 42, 0.75), rgba(11, 22, 17, 0.95));
+    }
+    .night-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+    .night-card-title {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .night-card-date {
+      font-size: 12px;
+      color: var(--cream-dim);
+    }
+    .night-card-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      font-size: 13px;
+    }
+    .night-card-stat {
+      color: var(--cream-dim);
+    }
+    .night-card-stat strong {
+      display: block;
+      color: var(--cream);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 16px;
+    }
+    .viewing-past {
+      background: rgba(212, 175, 55, 0.12);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      font-size: 14px;
+      color: var(--gold);
+    }
+    .viewing-past strong {
+      display: block;
+      margin-bottom: 2px;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header class="brand">
       <div>
-        <div class="wordmark"><span><i class="live-dot"></i>Home game</span>The Rail</div>
+        <div class="wordmark"><span id="headerLabel"><i class="live-dot"></i>Home game</span>The Rail</div>
         <div id="dateLine" style="margin-top:6px;color:var(--cream-dim);font-size:13px;letter-spacing:.04em">Sat 29 Aug 2026</div>
       </div>
       <div class="header-actions">
+        <button class="icon-btn" id="nightsBtn" type="button">Nights</button>
+        <button class="icon-btn" id="saveBtn" type="button">Save</button>
         <button class="icon-btn" id="undoBtn" type="button">Undo</button>
       </div>
     </header>
 
-    <section class="rail" id="rail">
-      <div class="stat"><b id="tIn">$0</b><label>Money in</label></div>
-      <div class="stat"><b id="tOut">$0</b><label>Money out</label></div>
-      <div class="stat"><b id="tTable">$0</b><label>On table</label></div>
-    </section>
-    <div class="flag warn" id="flag">Add the table. Buy-ins stay on the felt until everyone cashes.</div>
+    <div class="main-view" id="mainView">
+      <div id="viewingPastBanner" class="viewing-past" style="display:none">
+        <strong>Viewing past night</strong>
+        <span id="viewingPastName"></span>
+      </div>
 
-    <div class="players" id="players"></div>
+      <section class="rail" id="rail">
+        <div class="stat"><b id="tIn">$0</b><label>Money in</label></div>
+        <div class="stat"><b id="tOut">$0</b><label>Money out</label></div>
+        <div class="stat"><b id="tTable">$0</b><label>On table</label></div>
+      </section>
+      <div class="flag warn" id="flag">Add the table. Buy-ins stay on the felt until everyone cashes.</div>
 
-    <form class="add" id="addForm" autocomplete="off">
-      <input id="newName" name="name" maxlength="32" placeholder="Player name" enterkeyhint="done" autocapitalize="words" />
-      <button class="btn buy" type="submit">Add</button>
-    </form>
+      <div class="players" id="players"></div>
 
-    <h2 class="sec">Settlement</h2>
-    <div id="settleBox">
-      <p class="empty">No chips have moved yet.</p>
+      <form class="add" id="addForm" autocomplete="off">
+        <input id="newName" name="name" maxlength="32" placeholder="Player name" enterkeyhint="done" autocapitalize="words" />
+        <button class="btn buy" type="submit">Add</button>
+      </form>
+
+      <h2 class="sec">Settlement</h2>
+      <div id="settleBox">
+        <p class="empty">No chips have moved yet.</p>
+      </div>
+      <div class="row-btns" style="margin-top:8px">
+        <button class="btn gold" id="settleNowBtn" type="button">Settle now</button>
+      </div>
+      <p class="empty" id="settleHint" style="margin-top:8px">Settle now treats anyone still in as cashing $0.</p>
+
+      <div class="foot">
+        <button class="btn buy" id="backToTonightBtn" type="button" style="display:none">Back to tonight</button>
+        <button class="btn danger" id="resetBtn" type="button">Reset night</button>
+      </div>
     </div>
-    <div class="row-btns" style="margin-top:8px">
-      <button class="btn gold" id="settleNowBtn" type="button">Settle now</button>
-    </div>
-    <p class="empty" id="settleHint" style="margin-top:8px">Settle now treats anyone still in as cashing $0.</p>
 
-    <div class="foot">
-      <button class="btn danger" id="resetBtn" type="button">Reset night</button>
+    <div class="nights-view" id="nightsView">
+      <h2 class="sec">Saved nights</h2>
+      <div id="savedNightsList"></div>
+      <div class="foot">
+        <button class="btn buy" id="backFromNightsBtn" type="button">Back to tonight</button>
+      </div>
     </div>
   </div>
 
@@ -398,6 +482,7 @@
       "use strict";
 
       const STORAGE_KEY = "the-rail-2026-08-29";
+      const SAVES_KEY = "the-rail-saves";
       const DATE = "Sat 29 Aug 2026";
       const MAX_UNDO = 80;
 
@@ -408,6 +493,8 @@
       let settleNow = false;
       let modal = null;
       let state = null;
+      let viewMode = "current"; // "current" | "nights" | "viewing-past"
+      let viewingGame = null;
 
       function emptyGame() {
         return {
@@ -484,6 +571,50 @@
         }
       }
 
+      function loadSaves() {
+        try {
+          const raw = localStorage.getItem(SAVES_KEY);
+          if (!raw) return [];
+          const saves = JSON.parse(raw);
+          if (!Array.isArray(saves)) return [];
+          return saves;
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function saveSaves(saves) {
+        try {
+          localStorage.setItem(SAVES_KEY, JSON.stringify(saves));
+        } catch (e) {
+          toast("Couldn't save on this device");
+        }
+      }
+
+      function saveCurrentNight(name) {
+        name = String(name || "").trim();
+        if (!name) throw new Error("Name is required");
+        if (name.length > 80) throw new Error("Name is too long");
+        
+        const saves = loadSaves();
+        const snapshot = {
+          id: newId(),
+          name: name,
+          savedAt: nowIso(),
+          game: clone(game),
+        };
+        
+        saves.unshift(snapshot);
+        saveSaves(saves);
+        return snapshot;
+      }
+
+      function deleteSavedNight(id) {
+        let saves = loadSaves();
+        saves = saves.filter(function (s) { return s.id !== id; });
+        saveSaves(saves);
+      }
+
       function pushUndo() {
         undoStack.push(snapshot());
         if (undoStack.length > MAX_UNDO) {
@@ -546,47 +677,52 @@
         return { ready: ready, stillIn: stillIn, payments: payments, settleNow: settleNowFlag };
       }
 
-      function publicState(settleNowFlag) {
-        let moneyIn = 0, moneyOut = 0;
-        for (let i = 0; i < game.players.length; i++) {
-          moneyIn += game.players[i].buyIn || 0;
-          moneyOut += game.players[i].cashed || 0;
+      function renderNightsList() {
+        const saves = loadSaves();
+        const list = $("savedNightsList");
+        list.innerHTML = "";
+        
+        if (saves.length === 0) {
+          list.innerHTML = '<p class="empty">No saved nights yet. Use the Save button to snapshot the current game.</p>';
+          return;
         }
-        const onTable = Math.round((moneyIn - moneyOut) * 100) / 100;
-        const bought = game.players.filter(function (p) { return (p.buyIn || 0) > 0; });
-        const allOut = bought.length ? bought.every(function (p) { return !p.in; }) : false;
-        const players = game.players.map(function (p) {
-          const buy = p.buyIn || 0;
-          const cashed = p.cashed || 0;
-          const sitting = Boolean(p.in) && buy > 0;
-          const net = sitting ? null : Math.round((cashed - buy) * 100) / 100;
-          return {
-            id: p.id,
-            name: p.name,
-            buyIn: buy,
-            cashed: cashed,
-            in: Boolean(p.in),
-            canRemove: buy === 0,
-            net: net,
-            status: sitting ? "in" : (buy > 0 ? "out" : "seated"),
-          };
+        
+        saves.forEach(function (saved) {
+          const g = saved.game;
+          let moneyIn = 0, playerCount = 0;
+          if (g && Array.isArray(g.players)) {
+            playerCount = g.players.length;
+            for (let i = 0; i < g.players.length; i++) {
+              moneyIn += g.players[i].buyIn || 0;
+            }
+          }
+          
+          const card = document.createElement("div");
+          card.className = "night-card";
+          card.onclick = function () { showPastGame(saved); };
+          
+          const savedDate = new Date(saved.savedAt);
+          const dateStr = savedDate.toLocaleDateString(undefined, { 
+            month: 'short', 
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+          });
+          
+          card.innerHTML = 
+            '<div class="night-card-header">' +
+              '<div class="night-card-title"></div>' +
+              '<div class="night-card-date">' + dateStr + '</div>' +
+            '</div>' +
+            '<div class="night-card-stats">' +
+              '<div class="night-card-stat"><strong>' + money(moneyIn) + '</strong>Money in</div>' +
+              '<div class="night-card-stat"><strong>' + playerCount + '</strong>Players</div>' +
+              '<div class="night-card-stat"><strong>' + (g.date || DATE) + '</strong>Date</div>' +
+            '</div>';
+          
+          card.querySelector(".night-card-title").textContent = saved.name;
+          list.appendChild(card);
         });
-        return {
-          date: game.date || DATE,
-          updatedAt: game.updatedAt,
-          seq: game.seq || 0,
-          players: players,
-          totals: {
-            moneyIn: Math.round(moneyIn * 100) / 100,
-            moneyOut: Math.round(moneyOut * 100) / 100,
-            onTable: onTable,
-            balanced: Math.abs(onTable) < 0.005 && allOut && bought.length > 0,
-            allCashedOut: allOut,
-            playerCount: game.players.length,
-          },
-          settlement: settlementPayments(game.players, settleNowFlag),
-          canUndo: undoStack.length > 0,
-        };
       }
 
       function applyAddPlayer(name) {
@@ -690,9 +826,92 @@
         toast._t = setTimeout(function () { el.classList.remove("show"); }, 2400);
       }
 
+      function showMainView() {
+        viewMode = "current";
+        viewingGame = null;
+        $("mainView").classList.remove("hidden");
+        $("nightsView").classList.remove("active");
+        $("viewingPastBanner").style.display = "none";
+        $("backToTonightBtn").style.display = "none";
+        $("addForm").style.display = "flex";
+        $("settleNowBtn").disabled = false;
+        $("resetBtn").style.display = "block";
+        $("saveBtn").style.display = "block";
+        $("undoBtn").style.display = "block";
+        $("headerLabel").innerHTML = '<i class="live-dot"></i>Home game';
+      }
+
+      function showNightsView() {
+        viewMode = "nights";
+        $("mainView").classList.add("hidden");
+        $("nightsView").classList.add("active");
+        renderNightsList();
+      }
+
+      function showPastGame(savedGame) {
+        viewMode = "viewing-past";
+        viewingGame = clone(savedGame.game);
+        $("mainView").classList.remove("hidden");
+        $("nightsView").classList.remove("active");
+        $("viewingPastBanner").style.display = "block";
+        $("viewingPastName").textContent = savedGame.name;
+        $("backToTonightBtn").style.display = "block";
+        $("addForm").style.display = "none";
+        $("settleNowBtn").disabled = true;
+        $("resetBtn").style.display = "none";
+        $("saveBtn").style.display = "none";
+        $("undoBtn").style.display = "none";
+        $("headerLabel").textContent = "Past night";
+        refresh();
+      }
+
       function refresh() {
-        state = publicState(settleNow);
+        const gameToShow = viewMode === "viewing-past" ? viewingGame : game;
+        state = publicStateForGame(gameToShow, settleNow);
         render();
+      }
+
+      function publicStateForGame(g, settleNowFlag) {
+        let moneyIn = 0, moneyOut = 0;
+        for (let i = 0; i < g.players.length; i++) {
+          moneyIn += g.players[i].buyIn || 0;
+          moneyOut += g.players[i].cashed || 0;
+        }
+        const onTable = Math.round((moneyIn - moneyOut) * 100) / 100;
+        const bought = g.players.filter(function (p) { return (p.buyIn || 0) > 0; });
+        const allOut = bought.length ? bought.every(function (p) { return !p.in; }) : false;
+        const players = g.players.map(function (p) {
+          const buy = p.buyIn || 0;
+          const cashed = p.cashed || 0;
+          const sitting = Boolean(p.in) && buy > 0;
+          const net = sitting ? null : Math.round((cashed - buy) * 100) / 100;
+          return {
+            id: p.id,
+            name: p.name,
+            buyIn: buy,
+            cashed: cashed,
+            in: Boolean(p.in),
+            canRemove: buy === 0,
+            net: net,
+            status: sitting ? "in" : (buy > 0 ? "out" : "seated"),
+          };
+        });
+        return {
+          date: g.date || DATE,
+          updatedAt: g.updatedAt,
+          seq: g.seq || 0,
+          players: players,
+          totals: {
+            moneyIn: Math.round(moneyIn * 100) / 100,
+            moneyOut: Math.round(moneyOut * 100) / 100,
+            onTable: onTable,
+            balanced: Math.abs(onTable) < 0.005 && allOut && bought.length > 0,
+            allCashedOut: allOut,
+            playerCount: g.players.length,
+          },
+          settlement: settlementPayments(g.players, settleNowFlag),
+          canUndo: undoStack.length > 0,
+        };
       }
 
       function render() {
@@ -749,10 +968,12 @@
           el.querySelector(".seat-name").textContent = p.name;
           el.querySelector(".pill").textContent = p.status === "in" ? "In" : p.status === "out" ? "Out" : "Seated";
           const btns = el.querySelector(".row-btns");
+          const isViewingPast = viewMode === "viewing-past";
           const buy = document.createElement("button");
           buy.className = "btn buy";
           buy.type = "button";
           buy.textContent = p.status === "out" ? "Sit back · buy-in" : "Buy-in";
+          buy.disabled = isViewingPast;
           buy.onclick = function () { openModal("buy", p); };
           btns.appendChild(buy);
           if (p.buyIn > 0) {
@@ -760,6 +981,7 @@
             cash.className = "btn cash";
             cash.type = "button";
             cash.textContent = p.status === "out" ? "Update cash-out" : "Cash out";
+            cash.disabled = isViewingPast;
             cash.onclick = function () { openModal("cash", p); };
             btns.appendChild(cash);
           } else if (p.canRemove) {
@@ -767,6 +989,7 @@
             rm.className = "btn ghost";
             rm.type = "button";
             rm.textContent = "Remove";
+            rm.disabled = isViewingPast;
             rm.onclick = function () { removePlayer(p); };
             btns.appendChild(rm);
           }
@@ -798,6 +1021,24 @@
       }
 
       function openModal(mode, player) {
+        if (mode === "save") {
+          modal = { mode: "save" };
+          $("modalTitle").textContent = "Save night";
+          $("modalSub").textContent = "Give this night a name for your records.";
+          const d = new Date();
+          const defaultName = d.toLocaleDateString(undefined, {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+          });
+          $("modalAmt").value = defaultName;
+          $("quickChips").innerHTML = "";
+          $("scrim").classList.add("open");
+          setTimeout(function () { $("modalAmt").focus(); $("modalAmt").select(); }, 50);
+          return;
+        }
+        
         modal = { mode: mode, id: player.id, name: player.name };
         $("modalTitle").textContent = mode === "buy" ? "Buy-in" : "Cash out";
         $("modalSub").textContent = mode === "buy"
@@ -828,6 +1069,12 @@
         if (!modal) return;
         const amt = $("modalAmt").value.trim();
         try {
+          if (modal.mode === "save") {
+            saveCurrentNight(amt);
+            toast("Night saved as \"" + amt + "\"");
+            closeModal();
+            return;
+          }
           if (modal.mode === "buy") {
             applyBuyIn(modal.id, Number(amt));
             toast(modal.name + " bought in " + money(amt));
@@ -873,6 +1120,24 @@
         } catch (e) {
           toast(e.message);
         }
+      };
+
+      $("saveBtn").onclick = function () {
+        openModal("save", null);
+      };
+
+      $("nightsBtn").onclick = function () {
+        showNightsView();
+      };
+
+      $("backFromNightsBtn").onclick = function () {
+        showMainView();
+        refresh();
+      };
+
+      $("backToTonightBtn").onclick = function () {
+        showMainView();
+        refresh();
       };
 
       $("resetBtn").onclick = function () {
