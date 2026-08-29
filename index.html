@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1611" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="The Rail" />
+  <title>The Rail — Sat 29 Aug 2026</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2310241a'/%3E%3Ccircle cx='16' cy='16' r='9' fill='%23f3e6c8'/%3E%3Ctext x='16' y='21' text-anchor='middle' font-size='12' font-family='Georgia' fill='%2310241a'%3ER%3C/text%3E%3C/svg%3E" />
+  <style>
+    :root {
+      --felt: #10261b;
+      --felt-deep: #0b1611;
+      --felt-lit: #1a3d2a;
+      --cream: #f3e6c8;
+      --cream-dim: #c9b894;
+      --gold: #d4af37;
+      --gold-soft: #c9a227;
+      --ink: #0c1410;
+      --win: #7dcea0;
+      --lose: #e07a7a;
+      --line: rgba(243, 230, 200, 0.12);
+      --chip: #f7efe0;
+      --safe: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(1200px 700px at 50% -10%, rgba(212, 175, 55, 0.08), transparent 50%),
+        radial-gradient(800px 500px at 110% 80%, rgba(20, 80, 50, 0.4), transparent 50%),
+        repeating-radial-gradient(circle at 20% 30%, rgba(255,255,255,0.012) 0 1px, transparent 1px 3px),
+        linear-gradient(180deg, #12291d 0%, var(--felt-deep) 40%, #08110c 100%);
+      color: var(--cream);
+      min-height: 100dvh;
+      padding: 18px 16px calc(28px + var(--safe));
+    }
+
+    .wrap { max-width: 460px; margin: 0 auto; }
+
+    header.brand {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .wordmark {
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 700;
+      font-size: 34px;
+      letter-spacing: -0.03em;
+      line-height: 0.95;
+      color: var(--cream);
+    }
+    .wordmark span {
+      display: block;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-weight: 500;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+    .header-actions { display: flex; gap: 8px; }
+
+    .icon-btn {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: rgba(16, 38, 27, 0.6);
+      color: var(--cream);
+      min-width: 48px;
+      min-height: 48px;
+      border-radius: 14px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 0 12px;
+    }
+    .icon-btn:disabled { opacity: 0.35; }
+    .icon-btn:active { transform: scale(0.97); background: var(--felt-lit); }
+
+    .rail {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .stat {
+      background: linear-gradient(180deg, rgba(243,230,200,0.08), rgba(243,230,200,0.03));
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px 8px 10px;
+      text-align: center;
+    }
+    .stat b {
+      display: block;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+    .stat label {
+      display: block;
+      margin-top: 2px;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--cream-dim);
+    }
+    .flag {
+      font-size: 12.5px;
+      line-height: 1.4;
+      color: var(--cream-dim);
+      padding: 4px 4px 16px;
+      min-height: 2.2em;
+    }
+    .flag.warn { color: #e8c36a; }
+    .flag.ok { color: var(--win); }
+
+    .players { display: flex; flex-direction: column; gap: 10px; }
+
+    .seat {
+      background:
+        linear-gradient(180deg, rgba(26, 61, 42, 0.65), rgba(11, 22, 17, 0.85));
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 14px 14px 12px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.22);
+    }
+    .seat-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .seat-name {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .pill {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+    }
+    .pill.in { background: #1f4a32; color: var(--win); }
+    .pill.out { background: rgba(243,230,200,0.08); color: var(--cream-dim); }
+    .pill.seated { background: transparent; color: var(--cream-dim); }
+
+    .cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .cols div {
+      background: rgba(0,0,0,0.18);
+      border-radius: 12px;
+      padding: 8px 8px 7px;
+    }
+    .cols small {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--cream-dim);
+    }
+    .cols em {
+      font-style: normal;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .net.pos { color: var(--win); }
+    .net.neg { color: var(--lose); }
+    .net.muted { color: var(--cream-dim); font-weight: 500; font-size: 15px; }
+
+    .row-btns { display: flex; gap: 8px; }
+    .btn {
+      appearance: none;
+      border: 0;
+      border-radius: 14px;
+      min-height: 48px;
+      font: inherit;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.01em;
+      padding: 0 14px;
+      flex: 1;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.35; }
+    .btn.buy {
+      background: var(--cream);
+      color: var(--ink);
+    }
+    .btn.cash {
+      background: #2a1c14;
+      color: #f0d2a8;
+      border: 1px solid rgba(240, 210, 168, 0.25);
+    }
+    .btn.ghost {
+      background: transparent;
+      color: var(--cream-dim);
+      border: 1px solid var(--line);
+    }
+    .btn.gold {
+      background: linear-gradient(180deg, #e6c75a, #c9a227);
+      color: #1a1406;
+    }
+    .btn.danger {
+      background: transparent;
+      color: var(--lose);
+      border: 1px solid rgba(224, 122, 122, 0.35);
+    }
+
+    .add {
+      margin: 16px 0 22px;
+      display: flex;
+      gap: 8px;
+    }
+    .add input, .modal input {
+      flex: 1;
+      min-height: 52px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,0.28);
+      color: var(--cream);
+      font: inherit;
+      font-size: 16px;
+      padding: 0 14px;
+    }
+    .add input::placeholder, .modal input::placeholder { color: rgba(243,230,200,0.35); }
+    .add .btn { flex: 0 0 auto; min-width: 112px; }
+
+    h2.sec {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 20px;
+      font-weight: 600;
+      margin: 8px 0 10px;
+      letter-spacing: -0.02em;
+    }
+    .pay {
+      background: rgba(243,230,200,0.04);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 14px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .pay strong { font-family: Georgia, "Times New Roman", serif; font-size: 20px; }
+    .pay span { color: var(--cream-dim); font-size: 14px; }
+    .empty { color: var(--cream-dim); font-size: 14px; line-height: 1.45; margin: 0 0 12px; }
+
+    .foot { display: flex; gap: 8px; margin-top: 18px; }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(20px + var(--safe));
+      transform: translateX(-50%) translateY(20px);
+      background: #1c1610;
+      color: var(--cream);
+      border: 1px solid rgba(212,175,55,0.35);
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-size: 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.25s ease;
+      z-index: 50;
+      max-width: 90vw;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .scrim {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 8, 6, 0.72);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 30;
+      padding: 16px 16px calc(16px + var(--safe));
+    }
+    .scrim.open { display: flex; }
+    .modal {
+      width: min(460px, 100%);
+      background: linear-gradient(180deg, #1a3326, #101c16);
+      border: 1px solid var(--line);
+      border-radius: 22px 22px 18px 18px;
+      padding: 20px 16px 16px;
+    }
+    .modal h3 {
+      font-family: Georgia, "Times New Roman", serif;
+      margin: 0 0 4px;
+      font-size: 24px;
+    }
+    .modal p { margin: 0 0 14px; color: var(--cream-dim); font-size: 14px; }
+    .chips { display: flex; gap: 8px; margin: 10px 0 14px; flex-wrap: wrap; }
+    .chip {
+      appearance: none;
+      border: 1px solid rgba(243,230,200,0.22);
+      background: radial-gradient(circle at 30% 30%, #fff8ea, #e8d7b0);
+      color: var(--ink);
+      font-weight: 800;
+      border-radius: 999px;
+      min-height: 44px;
+      padding: 0 16px;
+      font-size: 15px;
+    }
+    .chip:active { transform: scale(0.96); }
+    .modal-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+    .live-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #6fbf88;
+      box-shadow: 0 0 0 4px rgba(111,191,136,0.15);
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="brand">
+      <div>
+        <div class="wordmark"><span><i class="live-dot"></i>Home game</span>The Rail</div>
+        <div id="dateLine" style="margin-top:6px;color:var(--cream-dim);font-size:13px;letter-spacing:.04em">Sat 29 Aug 2026</div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="undoBtn" type="button">Undo</button>
+      </div>
+    </header>
+
+    <section class="rail" id="rail">
+      <div class="stat"><b id="tIn">$0</b><label>Money in</label></div>
+      <div class="stat"><b id="tOut">$0</b><label>Money out</label></div>
+      <div class="stat"><b id="tTable">$0</b><label>On table</label></div>
+    </section>
+    <div class="flag warn" id="flag">Add the table. Buy-ins stay on the felt until everyone cashes.</div>
+
+    <div class="players" id="players"></div>
+
+    <form class="add" id="addForm" autocomplete="off">
+      <input id="newName" name="name" maxlength="32" placeholder="Player name" enterkeyhint="done" autocapitalize="words" />
+      <button class="btn buy" type="submit">Add</button>
+    </form>
+
+    <h2 class="sec">Settlement</h2>
+    <div id="settleBox">
+      <p class="empty">No chips have moved yet.</p>
+    </div>
+    <div class="row-btns" style="margin-top:8px">
+      <button class="btn gold" id="settleNowBtn" type="button">Settle now</button>
+    </div>
+    <p class="empty" id="settleHint" style="margin-top:8px">Settle now treats anyone still in as cashing $0.</p>
+
+    <div class="foot">
+      <button class="btn danger" id="resetBtn" type="button">Reset night</button>
+    </div>
+  </div>
+
+  <div class="scrim" id="scrim">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3 id="modalTitle">Buy-in</h3>
+      <p id="modalSub">How much is going in?</p>
+      <input id="modalAmt" inputmode="decimal" type="text" value="100" />
+      <div class="chips" id="quickChips"></div>
+      <div class="modal-actions">
+        <button class="btn ghost" type="button" id="modalCancel">Cancel</button>
+        <button class="btn buy" type="button" id="modalOk">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const STORAGE_KEY = "the-rail-2026-08-29";
+      const DATE = "Sat 29 Aug 2026";
+      const MAX_UNDO = 80;
+
+      const $ = (id) => document.getElementById(id);
+
+      let game = emptyGame();
+      let undoStack = [];
+      let settleNow = false;
+      let modal = null;
+      let state = null;
+
+      function emptyGame() {
+        return {
+          date: DATE,
+          updatedAt: nowIso(),
+          players: [],
+          seq: 0,
+        };
+      }
+
+      function nowIso() {
+        const d = new Date();
+        const pad = (n, w) => String(n).padStart(w || 2, "0");
+        const off = -d.getTimezoneOffset();
+        const sign = off >= 0 ? "+" : "-";
+        const oh = pad(Math.floor(Math.abs(off) / 60));
+        const om = pad(Math.abs(off) % 60);
+        return (
+          d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) +
+          "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds()) +
+          sign + oh + om
+        );
+      }
+
+      function newId() {
+        const bytes = new Uint8Array(5);
+        if (window.crypto && crypto.getRandomValues) {
+          crypto.getRandomValues(bytes);
+        } else {
+          for (let i = 0; i < 5; i++) bytes[i] = (Math.random() * 256) | 0;
+        }
+        return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+      }
+
+      function clone(obj) {
+        return JSON.parse(JSON.stringify(obj));
+      }
+
+      function snapshot() {
+        return clone({
+          players: game.players,
+          seq: game.seq || 0,
+          date: game.date || DATE,
+        });
+      }
+
+      function persist() {
+        game.updatedAt = nowIso();
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            game: game,
+            undo: undoStack.slice(-MAX_UNDO),
+          }));
+        } catch (e) {
+          toast("Couldn’t save on this device");
+        }
+      }
+
+      function load() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return;
+          const data = JSON.parse(raw);
+          if (!data || typeof data !== "object") return;
+          const g = data.game;
+          if (!g || typeof g !== "object" || !Array.isArray(g.players)) return;
+          g.date = DATE;
+          if (typeof g.seq !== "number") g.seq = 0;
+          game = g;
+          undoStack = Array.isArray(data.undo) ? data.undo : [];
+        } catch (_) {
+          game = emptyGame();
+          undoStack = [];
+        }
+      }
+
+      function pushUndo() {
+        undoStack.push(snapshot());
+        if (undoStack.length > MAX_UNDO) {
+          undoStack = undoStack.slice(-MAX_UNDO);
+        }
+      }
+
+      function moneyNum(n) {
+        const x = Number(n);
+        if (!Number.isFinite(x)) throw new Error("amount must be a number");
+        return Math.round(x * 100) / 100;
+      }
+
+      function cents(n) {
+        return Math.round(Number(n) * 100);
+      }
+
+      function findPlayer(pid) {
+        for (let i = 0; i < game.players.length; i++) {
+          if (game.players[i].id === pid) return game.players[i];
+        }
+        return null;
+      }
+
+      function settlementPayments(players, settleNowFlag) {
+        const nets = [];
+        const stillIn = [];
+        for (let i = 0; i < players.length; i++) {
+          const p = players[i];
+          if ((p.buyIn || 0) <= 0) continue;
+          if (p.in && !settleNowFlag) {
+            stillIn.push(p.name);
+            continue;
+          }
+          const net = cents(p.cashed || 0) - cents(p.buyIn || 0);
+          if (net !== 0) nets.push({ name: p.name, net: net });
+        }
+        const ready = stillIn.length === 0;
+        const losers = nets.filter(function (x) { return x.net < 0; })
+          .sort(function (a, b) { return a.net - b.net; });
+        const winners = nets.filter(function (x) { return x.net > 0; })
+          .sort(function (a, b) { return b.net - a.net; });
+        const payments = [];
+        if (!ready && !settleNowFlag) {
+          return { ready: ready, stillIn: stillIn, payments: [], settleNow: settleNowFlag };
+        }
+        let i = 0, j = 0;
+        while (i < losers.length && j < winners.length) {
+          const lose = losers[i];
+          const win = winners[j];
+          const pay = Math.min(-lose.net, win.net);
+          if (pay > 0) {
+            payments.push({ from: lose.name, to: win.name, amount: pay / 100 });
+          }
+          lose.net += pay;
+          win.net -= pay;
+          if (lose.net === 0) i += 1;
+          if (win.net === 0) j += 1;
+        }
+        return { ready: ready, stillIn: stillIn, payments: payments, settleNow: settleNowFlag };
+      }
+
+      function publicState(settleNowFlag) {
+        let moneyIn = 0, moneyOut = 0;
+        for (let i = 0; i < game.players.length; i++) {
+          moneyIn += game.players[i].buyIn || 0;
+          moneyOut += game.players[i].cashed || 0;
+        }
+        const onTable = Math.round((moneyIn - moneyOut) * 100) / 100;
+        const bought = game.players.filter(function (p) { return (p.buyIn || 0) > 0; });
+        const allOut = bought.length ? bought.every(function (p) { return !p.in; }) : false;
+        const players = game.players.map(function (p) {
+          const buy = p.buyIn || 0;
+          const cashed = p.cashed || 0;
+          const sitting = Boolean(p.in) && buy > 0;
+          const net = sitting ? null : Math.round((cashed - buy) * 100) / 100;
+          return {
+            id: p.id,
+            name: p.name,
+            buyIn: buy,
+            cashed: cashed,
+            in: Boolean(p.in),
+            canRemove: buy === 0,
+            net: net,
+            status: sitting ? "in" : (buy > 0 ? "out" : "seated"),
+          };
+        });
+        return {
+          date: game.date || DATE,
+          updatedAt: game.updatedAt,
+          seq: game.seq || 0,
+          players: players,
+          totals: {
+            moneyIn: Math.round(moneyIn * 100) / 100,
+            moneyOut: Math.round(moneyOut * 100) / 100,
+            onTable: onTable,
+            balanced: Math.abs(onTable) < 0.005 && allOut && bought.length > 0,
+            allCashedOut: allOut,
+            playerCount: game.players.length,
+          },
+          settlement: settlementPayments(game.players, settleNowFlag),
+          canUndo: undoStack.length > 0,
+        };
+      }
+
+      function applyAddPlayer(name) {
+        name = String(name || "").trim();
+        if (!name) throw new Error("Name is required");
+        if (name.length > 32) throw new Error("Name is too long");
+        const fold = name.toLowerCase();
+        for (let i = 0; i < game.players.length; i++) {
+          if (game.players[i].name.toLowerCase() === fold) {
+            throw new Error(game.players[i].name + " is already on the list");
+          }
+        }
+        pushUndo();
+        game.seq = (game.seq || 0) + 1;
+        game.players.push({
+          id: newId(),
+          name: name,
+          buyIn: 0,
+          cashed: 0,
+          lastCashOut: 0,
+          in: false,
+        });
+        persist();
+      }
+
+      function applyRemovePlayer(pid) {
+        const p = findPlayer(pid);
+        if (!p) throw new Error("Player not found");
+        if ((p.buyIn || 0) > 0) {
+          throw new Error("Can't remove someone who already bought in — cash them out instead");
+        }
+        pushUndo();
+        game.seq = (game.seq || 0) + 1;
+        game.players = game.players.filter(function (x) { return x.id !== pid; });
+        persist();
+      }
+
+      function applyBuyIn(pid, amount) {
+        const p = findPlayer(pid);
+        if (!p) throw new Error("Player not found");
+        const amt = moneyNum(amount);
+        if (amt <= 0) throw new Error("Buy-in must be more than 0");
+        if (amt > 1000000) throw new Error("That buy-in is implausible");
+        pushUndo();
+        game.seq = (game.seq || 0) + 1;
+        p.buyIn = Math.round(((p.buyIn || 0) + amt) * 100) / 100;
+        p.in = true;
+        persist();
+      }
+
+      function applyCashOut(pid, amount) {
+        const p = findPlayer(pid);
+        if (!p) throw new Error("Player not found");
+        if ((p.buyIn || 0) <= 0) throw new Error("They haven't bought in yet");
+        const amt = moneyNum(amount);
+        if (amt < 0) throw new Error("Cash-out can't be negative");
+        if (amt > 1000000) throw new Error("That cash-out is implausible");
+        pushUndo();
+        game.seq = (game.seq || 0) + 1;
+        if (p.in) {
+          p.cashed = Math.round(((p.cashed || 0) + amt) * 100) / 100;
+          p.lastCashOut = amt;
+          p.in = false;
+        } else {
+          const prev = p.lastCashOut || 0;
+          p.cashed = Math.round(((p.cashed || 0) - prev + amt) * 100) / 100;
+          p.lastCashOut = amt;
+          p.in = false;
+        }
+        persist();
+      }
+
+      function applyUndo() {
+        if (!undoStack.length) throw new Error("Nothing to undo");
+        const prev = undoStack.pop();
+        game.players = prev.players || [];
+        game.seq = prev.seq || 0;
+        game.date = prev.date || DATE;
+        persist();
+      }
+
+      function applyReset() {
+        pushUndo();
+        game = emptyGame();
+        persist();
+      }
+
+      function money(n) {
+        const x = Number(n);
+        if (!Number.isFinite(x)) return "$0";
+        const abs = Math.abs(x);
+        const body = Number.isInteger(abs) ? String(abs) : abs.toFixed(2);
+        return (x < 0 ? "−$" : "$") + body;
+      }
+
+      function toast(msg) {
+        const el = $("toast");
+        el.textContent = msg;
+        el.classList.add("show");
+        clearTimeout(toast._t);
+        toast._t = setTimeout(function () { el.classList.remove("show"); }, 2400);
+      }
+
+      function refresh() {
+        state = publicState(settleNow);
+        render();
+      }
+
+      function render() {
+        if (!state) return;
+        $("dateLine").textContent = state.date || DATE;
+        $("tIn").textContent = money(state.totals.moneyIn);
+        $("tOut").textContent = money(state.totals.moneyOut);
+        $("tTable").textContent = money(state.totals.onTable);
+        $("undoBtn").disabled = !state.canUndo;
+
+        const t = state.totals;
+        const flag = $("flag");
+        if (!t.playerCount) {
+          flag.className = "flag";
+          flag.textContent = "Add the table. Buy-ins stay on the felt until everyone cashes.";
+        } else if (!t.allCashedOut) {
+          flag.className = "flag warn";
+          flag.textContent = t.onTable
+            ? money(t.onTable) + " still on the table — settlement won’t balance until everyone cashes out."
+            : "Someone is still sitting. Cash them out before a clean settle.";
+        } else if (t.balanced) {
+          flag.className = "flag ok";
+          flag.textContent = "Books balance. Split the payments below.";
+        } else {
+          flag.className = "flag warn";
+          flag.textContent = "Everyone is cashed, but in and out don’t match. Check the numbers.";
+        }
+
+        const box = $("players");
+        box.innerHTML = "";
+        if (!state.players.length) {
+          const p = document.createElement("p");
+          p.className = "empty";
+          p.textContent = "No one seated yet. Add names as people sit down.";
+          box.appendChild(p);
+        }
+        state.players.forEach(function (p) {
+          const el = document.createElement("article");
+          el.className = "seat";
+          const netClass = p.net == null ? "muted" : p.net > 0 ? "pos" : p.net < 0 ? "neg" : "muted";
+          const netLabel = p.net == null ? "open" : money(p.net);
+          const cashLabel = p.status === "in" ? "in" : (p.buyIn > 0 ? money(p.cashed) : "—");
+          el.innerHTML =
+            '<div class="seat-top">' +
+              '<div class="seat-name"></div>' +
+              '<div class="pill ' + p.status + '"></div>' +
+            "</div>" +
+            '<div class="cols">' +
+              "<div><small>Buy-in</small><em>" + money(p.buyIn) + "</em></div>" +
+              '<div><small>Cash-out</small><em class="' + (p.status === "in" ? "net muted" : "") + '">' + cashLabel + "</em></div>" +
+              '<div><small>Net</small><em class="net ' + netClass + '">' + netLabel + "</em></div>" +
+            "</div>" +
+            '<div class="row-btns"></div>';
+          el.querySelector(".seat-name").textContent = p.name;
+          el.querySelector(".pill").textContent = p.status === "in" ? "In" : p.status === "out" ? "Out" : "Seated";
+          const btns = el.querySelector(".row-btns");
+          const buy = document.createElement("button");
+          buy.className = "btn buy";
+          buy.type = "button";
+          buy.textContent = p.status === "out" ? "Sit back · buy-in" : "Buy-in";
+          buy.onclick = function () { openModal("buy", p); };
+          btns.appendChild(buy);
+          if (p.buyIn > 0) {
+            const cash = document.createElement("button");
+            cash.className = "btn cash";
+            cash.type = "button";
+            cash.textContent = p.status === "out" ? "Update cash-out" : "Cash out";
+            cash.onclick = function () { openModal("cash", p); };
+            btns.appendChild(cash);
+          } else if (p.canRemove) {
+            const rm = document.createElement("button");
+            rm.className = "btn ghost";
+            rm.type = "button";
+            rm.textContent = "Remove";
+            rm.onclick = function () { removePlayer(p); };
+            btns.appendChild(rm);
+          }
+          box.appendChild(el);
+        });
+
+        const s = state.settlement;
+        const sb = $("settleBox");
+        sb.innerHTML = "";
+        if (!state.players.some(function (p) { return p.buyIn > 0; })) {
+          sb.innerHTML = '<p class="empty">No chips have moved yet.</p>';
+        } else if (s.payments.length) {
+          s.payments.forEach(function (pay) {
+            const d = document.createElement("div");
+            d.className = "pay";
+            d.innerHTML = "<span></span><strong></strong>";
+            d.querySelector("span").textContent = pay.from + " pays " + pay.to;
+            d.querySelector("strong").textContent = money(pay.amount);
+            sb.appendChild(d);
+          });
+        } else if (s.ready || settleNow) {
+          sb.innerHTML = '<p class="empty">Even table — no payments needed.</p>';
+        } else {
+          const names = s.stillIn.join(", ");
+          sb.innerHTML = '<p class="empty">Waiting on ' + names + ". Cash them out, or settle now if they are walking with nothing.</p>";
+        }
+        $("settleHint").style.display = s.ready && !settleNow ? "none" : "block";
+        $("settleNowBtn").textContent = settleNow && !s.ready ? "Using $0 for still-in" : "Settle now";
+      }
+
+      function openModal(mode, player) {
+        modal = { mode: mode, id: player.id, name: player.name };
+        $("modalTitle").textContent = mode === "buy" ? "Buy-in" : "Cash out";
+        $("modalSub").textContent = mode === "buy"
+          ? (player.status === "out" ? player.name + " sits back down." : "Chips for " + player.name + ".")
+          : "Count " + player.name + "’s remaining chips.";
+        $("modalAmt").value = mode === "buy" ? "100" : (player.status === "out" ? String(player.cashed) : "");
+        const chips = $("quickChips");
+        chips.innerHTML = "";
+        const vals = mode === "buy" ? [50, 100, 200, 300] : [0, 50, 100, 200];
+        vals.forEach(function (n) {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "chip";
+          b.textContent = money(n);
+          b.onclick = function () { $("modalAmt").value = String(n); };
+          chips.appendChild(b);
+        });
+        $("scrim").classList.add("open");
+        setTimeout(function () { $("modalAmt").focus(); $("modalAmt").select(); }, 50);
+      }
+
+      function closeModal() {
+        $("scrim").classList.remove("open");
+        modal = null;
+      }
+
+      function confirmModal() {
+        if (!modal) return;
+        const amt = $("modalAmt").value.trim();
+        try {
+          if (modal.mode === "buy") {
+            applyBuyIn(modal.id, Number(amt));
+            toast(modal.name + " bought in " + money(amt));
+          } else {
+            applyCashOut(modal.id, Number(amt));
+            toast(modal.name + " cashed " + money(amt));
+          }
+          closeModal();
+          refresh();
+        } catch (e) {
+          toast(e.message);
+        }
+      }
+
+      function removePlayer(p) {
+        try {
+          applyRemovePlayer(p.id);
+          toast(p.name + " removed");
+          refresh();
+        } catch (e) {
+          toast(e.message);
+        }
+      }
+
+      $("addForm").addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        const name = $("newName").value;
+        try {
+          applyAddPlayer(name);
+          $("newName").value = "";
+          $("newName").blur();
+          refresh();
+        } catch (e) {
+          toast(e.message);
+        }
+      });
+
+      $("undoBtn").onclick = function () {
+        try {
+          applyUndo();
+          toast("Undid last action");
+          refresh();
+        } catch (e) {
+          toast(e.message);
+        }
+      };
+
+      $("resetBtn").onclick = function () {
+        const ok = window.confirm("Reset the whole night? This clears every player, buy-in, and cash-out.");
+        if (!ok) return;
+        try {
+          applyReset();
+          settleNow = false;
+          toast("Night reset");
+          refresh();
+        } catch (e) {
+          toast(e.message);
+        }
+      };
+
+      $("settleNowBtn").onclick = function () {
+        settleNow = true;
+        refresh();
+        toast("Settlement using $0 for anyone still in");
+      };
+
+      $("modalCancel").onclick = closeModal;
+      $("modalOk").onclick = confirmModal;
+      $("scrim").addEventListener("click", function (e) {
+        if (e.target === $("scrim")) closeModal();
+      });
+      $("modalAmt").addEventListener("keydown", function (e) {
+        if (e.key === "Enter") confirmModal();
+        if (e.key === "Escape") closeModal();
+      });
+
+      load();
+      refresh();
+    })();
+  </script>
+</body>
+</html>
