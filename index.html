@@ -336,6 +336,70 @@
       margin-right: 6px;
       vertical-align: middle;
     }
+
+    .pnl-summary {
+      background: linear-gradient(180deg, rgba(26, 61, 42, 0.65), rgba(11, 22, 17, 0.85));
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 18px;
+      display: none;
+    }
+    .pnl-summary.show {
+      display: block;
+    }
+    .pnl-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .pnl-table thead {
+      border-bottom: 1px solid var(--line);
+    }
+    .pnl-table th {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--cream-dim);
+      text-align: left;
+      padding: 0 0 8px 0;
+    }
+    .pnl-table th:last-child {
+      text-align: right;
+    }
+    .pnl-table td {
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(243, 230, 200, 0.06);
+      font-size: 15px;
+    }
+    .pnl-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .pnl-table .player-name {
+      font-weight: 600;
+      color: var(--cream);
+    }
+    .pnl-table .amount {
+      text-align: right;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 16px;
+      color: var(--cream-dim);
+    }
+    .pnl-table .net {
+      text-align: right;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 17px;
+      font-weight: 600;
+    }
+    .pnl-table tfoot {
+      border-top: 1px solid var(--line);
+    }
+    .pnl-table tfoot td {
+      padding-top: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      border-bottom: none;
+    }
   </style>
 </head>
 <body>
@@ -363,6 +427,24 @@
       <input id="newName" name="name" maxlength="32" placeholder="Player name" enterkeyhint="done" autocapitalize="words" />
       <button class="btn buy" type="submit">Add</button>
     </form>
+
+    <div class="pnl-summary" id="pnlSummary">
+      <h2 class="sec" style="margin-top:0">Final PNL</h2>
+      <table class="pnl-table">
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th style="text-align:right">Buy-in</th>
+            <th style="text-align:right">Cash-out</th>
+            <th style="text-align:right">Net</th>
+          </tr>
+        </thead>
+        <tbody id="pnlTableBody">
+        </tbody>
+        <tfoot id="pnlTableFoot">
+        </tfoot>
+      </table>
+    </div>
 
     <h2 class="sec">Settlement</h2>
     <div id="settleBox">
@@ -774,6 +856,45 @@
         });
 
         const s = state.settlement;
+        
+        // Render PNL summary when ready to settle
+        const pnlSummary = $("pnlSummary");
+        const pnlBody = $("pnlTableBody");
+        const pnlFoot = $("pnlTableFoot");
+        
+        if ((s.ready || settleNow) && state.players.some(function (p) { return p.buyIn > 0; })) {
+          pnlSummary.classList.add("show");
+          pnlBody.innerHTML = "";
+          
+          // Render each player's PNL
+          state.players.forEach(function (p) {
+            if (p.buyIn <= 0) return; // Skip players who didn't buy in
+            
+            const net = p.net != null ? p.net : 0;
+            const netClass = net > 0 ? "pos" : net < 0 ? "neg" : "muted";
+            
+            const row = document.createElement("tr");
+            row.innerHTML = 
+              '<td class="player-name"></td>' +
+              '<td class="amount">' + money(p.buyIn) + '</td>' +
+              '<td class="amount">' + money(p.cashed) + '</td>' +
+              '<td class="net ' + netClass + '">' + money(net) + '</td>';
+            row.querySelector(".player-name").textContent = p.name;
+            pnlBody.appendChild(row);
+          });
+          
+          // Render totals footer
+          pnlFoot.innerHTML = 
+            '<tr>' +
+              '<td class="player-name">Total</td>' +
+              '<td class="amount">' + money(state.totals.moneyIn) + '</td>' +
+              '<td class="amount">' + money(state.totals.moneyOut) + '</td>' +
+              '<td class="net ' + (state.totals.balanced ? 'muted' : 'warn') + '">' + money(state.totals.onTable) + '</td>' +
+            '</tr>';
+        } else {
+          pnlSummary.classList.remove("show");
+        }
+        
         const sb = $("settleBox");
         sb.innerHTML = "";
         if (!state.players.some(function (p) { return p.buyIn > 0; })) {
